@@ -1,0 +1,105 @@
+6218.000
+1758.621
+0.000
+Motors: 54
+Sample X Stage: -8.617700
+Sample Y Stage: 5.147520
+Sample X Stage Big: 22.000000
+Sample Y Stage Labjack: 24.839144
+Sample Y Stage Robot: 0.000000
+Sample Y New: 50.131400
+Sample Alpha Stage: 0.159841
+Sample Phi Stage: -0.516799
+Sample Rotation Stage: 0.000000
+M201 Feedback: 0.002537
+M1 Pitch: 0.117785
+M1 Bend: 50.344796
+Detector Horizontal: 0.000000
+Detector Vertical: 0.000000
+Slit1 top: 9.025000
+Slit1 bottom: 12.107000
+Slit1 right: 11.679500
+Slit1 left: 9.802000
+Exit Slit top: 5.861000
+Exit Slit bottom: 12.869000
+Exit Slit left: 11.133500
+Exit Slit right: 4.326500
+GIWAXS beamstop X: 0.000000
+GIWAXS beamstop Y: 0.000000
+Beamstop X: 0.000000
+Beamstop Y: 0.000000
+Detector Left Motor: 0.000000
+Detector Right Motor: 0.000000
+Motorized Lab Jack: 7.303315
+M1 Alignment Tune: 0.117785
+print head height: 0.000000
+Rotation New: 0.000000
+printer roll: 0.000000
+EZ fast tension stage: 0.000000
+Motorized Lab Jack1: 0.000000
+Sample Rotation Stage ESP: 0.000000
+Printing motor: 0.000000
+GIWAXS beamstop Y thorlabs: 0.000000
+Sample Y Stage Arthur: 0.000000
+Flight Tube Horizontal: 0.000000
+Flight Tube Vertical: 0.000000
+Hacked Ager Stage: 0.000000
+Sample Rotation Stage Miller: 0.000000
+Mono Angle: 0.000000
+Xtal2 Pico 1 Feedback: 0.000000
+Xtal2 Pico 2 Feedback: 0.000000
+Xtal2 Pico 3 Feedback: 0.000000
+Xtal2 Pico 1: 0.000000
+Xtal2 Pico 2: 0.000000
+Xtal2 Pico 3: 0.000000
+Sample Y Stage_old: 0.000000
+AO Waveform: 0.000000
+BS Y: 0.010000
+BS X: -0.075233
+DIOs: 13
+SAXS Protector: 0.000000
+Beamline Shutter Closed: 0.000000
+Beam Current Over Threshold: 1.000000
+Slit 1 in Position: 1.000000
+Slit 2 in Position: 1.000000
+Temp Beamline Shutter Open: 0.000000
+Beamline Shutter Open: 1.000000
+Feedback Interlock: 1.000000
+Beamline Pass Beam: 1.000000
+Gate Shutter: 0.000000
+Bruker pulses: 0.000000
+Slit Top Good: 1.000000
+Slit Bottom Good: 1.000000
+AIs: 27
+Beam Current: 500.303529
+Beamline Shutter AI: 1.000000
+Beamline Pass Beam AI: 1.000000
+slit1 bottom current: NaN
+slit1 top current: NaN
+GiSAXS Beamstop: 0.874066
+Izero AI: 0.000000
+I1 AI: 0.000106
+PHI Alignment Beamstop: 0.000494
+AI Channel 6: -0.004703
+AI Channel 7: -0.004513
+Vertical Beam Position: NaN
+Pilatus 300KW trigger pulse: 0.000000
+Pilatus 1M Trigger Pulse: 0.000000
+PCO Invert: 0.000000
+Gate: 0.000000
+Izero: 6218.000000
+I1: 0.000000
+GiSAXS Beamstop Counter: 87753.000000
+Sum of Slit Current: 0.791321
+Pilatus 100K exp out: 0.000000
+Kramer strain data: 0.000000
+Xtal2 Pico 1: NaN
+Xtal2 Pico 2: NaN
+Xtal2 Pico 3: NaN
+M1 Pitch: 0.117785
+ABS(Vertical Beam Position): NaN
+!0 
+Alpha_scan_positions=
+Alpha_scan_I0_intensities=
+Alpha_scan_I1_intensities=
+Alpha_scan_diode_intensities=
