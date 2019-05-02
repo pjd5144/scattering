@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size':22})
 
+
         
 class reduction:
     
@@ -28,9 +29,10 @@ class reduction:
         self.qz = -(np.arange(1,ypixels+1)-center_y)*self.qpx
         self.xran = np.arange(self.center_x,self.xpixels)
         self.yran = np.arange(0,self.center_y+1)
+        self.wavelength = wavelength
         
     def load(self):
-        self.data = np.array(fabio.open(self.name).data)
+        self.data = np.array(fabio.open(self.name).data,dtype=float)
         self.data[self.data < 1] = 1
 
     def raw_plot(self,size=(12,9)):
@@ -65,19 +67,63 @@ class reduction:
         I = np.mean(self.data[self.yran,xpixel1:xpixel2],axis=1)
         qz = self.qz[self.yran]
         return qz, I
-
+    
+    def SRFconvert(self,alphai):
+        self.alphai = alphai*np.pi/180
+        ypos = (self.center_y - np.arange(1,self.ypixels+1))*self.pixel_size
+        ypos = ypos.reshape(len(ypos),1)
+        xpos = (np.arange(1,self.xpixels+1)-self.center_x)*self.pixel_size
+        xpos = xpos.reshape((1,len(xpos)))
+        gamma = np.arctan(xpos/self.SDD)
+        delta = np.arctan(ypos/np.sqrt(self.SDD**2+xpos**2))
+        qx = 2*np.pi/self.wavelength*(-np.cos(delta)*np.sin(gamma));
+        qy = 2*np.pi/self.wavelength*(np.cos(self.alphai)*(np.cos(delta)*np.cos(gamma)-1)+np.sin(self.alphai)*np.sin(delta));
+        self.qz = 2*np.pi/self.wavelength*(np.cos(self.alphai)*np.sin(delta) + np.sin(self.alphai)*(1 - np.cos(delta)*np.cos(gamma)));
+        self.q = np.sqrt(qx**2+qy**2+self.qz**2);
+        self.qr = np.sqrt(qx**2+qy**2);
+        self.chi = np.arccos(self.qz/self.q);
+        self.chi[:,0:self.center_x] *= -1
+        self.qr[:,0:self.center_x] *= -1
+        placeholder = self.data
+        placeholder[:,self.center_x-1] = np.nan
+        self.dataN = placeholder
+        self.q[self.center_y:-1,:] *= -1
 
 if __name__ == '__main__':
-    
-
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    mpl.use('Agg')
+    mpl.rcParams['figure.dpi']= 72
+    mapvalue = mpl.cm.get_cmap('viridis')
+    fcolor = mapvalue(0)
+    plt.rcParams.update({'font.size':22})
     image1 = reduction('PAAGNP1_A0p160_2m.edf')
     image1.load()
     data = image1.data
-    image1.raw_plot((12,10))
+#    image1.raw_plot((12,10))
     image1.geometry(1990,622,1320)
+    image1.SRFconvert(0.16)
+#    x = np.stack((image1.chi, image1.qz, image1.data),axis=-1)
+    fig,ax = plt.subplots(figsize=(12,9))
+    ax.set_facecolor(fcolor)
+    image1.chi[np.isnan(image1.chi)] = 0
+    Zm = np.ma.masked_invalid(image1.dataN)
+    cs = plt.pcolormesh(image1.chi,image1.qz,np.log(Zm),antialiased='False')
+#    cs = ax.contourf(image1.chi,image1.qz,np.log(image1.data),50,corner_mask='True')
+    plt.xlim((-1.5,1.5))
+    plt.ylim((0, 0.3))
+    plt.colorbar(cs)
+    plt.xlabel(r'Azimuthal Angle - $\chi$ [rad]')
+    plt.ylabel(r'q$_z$ [nm$^{-1}$]')
+    fig.savefig("testimage3.png",format='png',dpi=600)
+#    plt.show()
+
+
+#    ypos,xpos = image1.SRFconvert()
+#    plt.imshow(xpos)
 #    print(image1.qz)
-    image1.plot((12,10))
-    qz, I = image1.qz_linecut()
-    plt.figure()
-    plt.loglog(qz,I)
-    plt.show()
+#    image1.plot((12,10))
+#    qz, I = image1.qp_linecut()
+#    plt.figure()
+#    plt.loglog(qz,I)
+#    plt.show()
