@@ -17,14 +17,14 @@ class reduction:
         self.name = name
         
     def geometry(self,SDD,center_x, center_y, xpixels = 1475, ypixels = 1679, 
-                 pixel_size = .172,wavelength = 1.23894):
+                 pixel_size = .172,wavelength = .123894):
         self.SDD = SDD
         self.center_x = center_x
         self.center_y = center_y
         self.xpixels = xpixels
         self.ypixels = ypixels
         self.pixel_size = pixel_size
-        self.qpx = 2*np.pi*(pixel_size*10e6)/(self.SDD*10e6*wavelength/10)
+        self.qpx = 2*np.pi*(pixel_size*10e6)/(self.SDD*10e6*wavelength)
         self.qp = (np.arange(1,xpixels+1)-center_x)*self.qpx
         self.qz = -(np.arange(1,ypixels+1)-center_y)*self.qpx
         self.xran = np.arange(self.center_x,self.xpixels)
@@ -88,42 +88,107 @@ class reduction:
         placeholder[:,self.center_x-1] = np.nan
         self.dataN = placeholder
         self.q[self.center_y:-1,:] *= -1
+        self.chi[np.isnan(self.chi)] = 0
+    
+    def remesh_qrqz(self):
+        self.qrmin = np.min(self.qr)
+        self.qrmax = np.max(self.qr)
+        self.qzmax = np.max(self.qz)
+        self.qzmin = np.min(self.qz)
+        qr1d = self.qr.ravel()
+        qz1d = self.qz.ravel()
+        D = self.data.ravel()
+        
+        # Remesh with no pixel-splitting or interpolation
+        num_bins_r = int((self.qrmax-self.qrmin)/self.qpx) # need to calculate dchi if want to use q v chi plot
+        num_bins_z = int((self.qzmax-self.qzmin)/self.qpx)
+        bins=[num_bins_r,num_bins_z]
+        remesh_data, rbin, zbin = np.histogram2d(qr1d, qz1d, bins=bins, normed=False, weights=D)
+        num_per_bin, rbin, zbin = np.histogram2d(qr1d,qz1d,bins=bins, normed=False,weights=None)
+        with np.errstate(divide='ignore',invalid='ignore'):
+            remesh_data =  remesh_data/num_per_bin
+            remesh_data[np.isnan(remesh_data)] = 1
+        self.remesh_data = np.rot90(remesh_data)
+        
+    def remesh_chiq(self):
+        self.chimin = np.min(self.chi)
+        self.chimax = np.max(self.chi)
+        self.qmax = np.max(self.q)
+        self.qmin = np.min(self.q)
+        chi1d = self.chi.ravel()
+        q1d = self.q.ravel()
+        D = self.data.ravel()
+        
+        # Remesh with no pixel-splitting or interpolation
+        num_bins_r = int((self.chimax-self.chimin)/np.arctan(self.qpx))/2.5 # need to calculate dchi if want to use q v chi plot
+        num_bins_z = int((self.qmax-self.qmin)/self.qpx)
+        bins=[num_bins_r,num_bins_z]
+        remesh_data, rbin, zbin = np.histogram2d(chi1d, q1d, bins=bins, normed=False, weights=D)
+        num_per_bin, rbin, zbin = np.histogram2d(chi1d,q1d,bins=bins, normed=False,weights=None)
+        with np.errstate(divide='ignore',invalid='ignore'):
+            remesh_data =  remesh_data/num_per_bin
+            remesh_data[np.isnan(remesh_data)] = 1
+        self.remesh_data = np.rot90(remesh_data)
 
+    def meshplot(self,plottype='qrqz',cmap='jet',raster='True'):
+        Zm = np.ma.masked_invalid(self.dataN)
+        if plottype == 'qrqz':
+            cs = plt.pcolormesh(self.qr,self.qz,np.log(Zm),cmap=cmap,antialiased='True',rasterized=raster)
+        elif plottype == 'chiq':
+            cs = plt.pcolormesh(self.chi,self.q,np.log(Zm),cmap=cmap,antialiased='True',rasterized=raster)
+        elif plottype == 'chiqz':
+            cs = plt.pcolormesh(self.chi,self.qz,np.log(Zm),cmap=cmap,antialiased='True',rasterized=raster)
+        else:
+            print('Incorrect plot type')
+        return cs
+    
+    def implot(self,plottype='qrqz',cmap='jet'):
+        if plottype == 'qrqz':
+            cs = plt.imshow(np.log(self.remesh_data),interpolation='nearest',cmap=cmap,extent=(self.qrmin, self.qrmax, self.qzmin, self.qzmax))
+        elif plottype == 'chiq':
+            cs = plt.imshow(np.log(self.remesh_data),interpolation='nearest',cmap=cmap,extent=(self.chimin, self.chimax, self.qmin, self.qmax))
+        else:
+            print('Incorrect plot type')
+        return cs
+    
+    
+    
 if __name__ == '__main__':
+    
+    # import packages
     import matplotlib.pyplot as plt
     import matplotlib as mpl
-    mpl.use('Agg')
-    mpl.rcParams['figure.dpi']= 72
-    mapvalue = mpl.cm.get_cmap('viridis')
+    import seaborn as sns
+#    import time
+    
+    # update parameters
+    mpl.rcParams.update({'font.sans-serif':'Arial','font.family':'sans-serif'})
+    mpl.rcParams['figure.dpi'] = 150
+    sns.set_context(context='paper')
+    mpl.rcParams['svg.fonttype'] = 'none'
+    mapvalue = mpl.cm.get_cmap('jet')
     fcolor = mapvalue(0)
-    plt.rcParams.update({'font.size':22})
+    
+    # import and process data
     image1 = reduction('PAAGNP1_A0p160_2m.edf')
     image1.load()
     data = image1.data
 #    image1.raw_plot((12,10))
-    image1.geometry(1990,622,1320)
+    image1.geometry(300,622,1320)
     image1.SRFconvert(0.16)
-#    x = np.stack((image1.chi, image1.qz, image1.data),axis=-1)
-    fig,ax = plt.subplots(figsize=(12,9))
+    
+    # plotting
+    fig, ax = plt.subplots(figsize=(6,4.5))
     ax.set_facecolor(fcolor)
-    image1.chi[np.isnan(image1.chi)] = 0
-    Zm = np.ma.masked_invalid(image1.dataN)
-    cs = plt.pcolormesh(image1.chi,image1.qz,np.log(Zm),antialiased='False')
-#    cs = ax.contourf(image1.chi,image1.qz,np.log(image1.data),50,corner_mask='True')
-    plt.xlim((-1.5,1.5))
-    plt.ylim((0, 0.3))
+    cs = image1.meshplot('qrqz')
+#    plt.xlim((-1.5,1.5))
+#    plt.ylim((0, 30))
     plt.colorbar(cs)
     plt.xlabel(r'Azimuthal Angle - $\chi$ [rad]')
     plt.ylabel(r'q$_z$ [nm$^{-1}$]')
-    fig.savefig("testimage3.png",format='png',dpi=600)
-#    plt.show()
+#    time1 = time.time()
+    fig.savefig("testimage.png",dpi=600)
+#    time2 = time.time()
+#    print(time2-time1)
+    plt.show()
 
-
-#    ypos,xpos = image1.SRFconvert()
-#    plt.imshow(xpos)
-#    print(image1.qz)
-#    image1.plot((12,10))
-#    qz, I = image1.qp_linecut()
-#    plt.figure()
-#    plt.loglog(qz,I)
-#    plt.show()
